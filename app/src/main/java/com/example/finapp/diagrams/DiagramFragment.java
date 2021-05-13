@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.example.finapp.R;
@@ -19,18 +18,18 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
 import java.util.ArrayList;
 
-public class DiagramFragment extends AppCompatActivity {
+public class DiagramFragment extends Fragment {
 
     private Button button;
     private LineChart chart;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_graphics, container, false);
 
-        button = findViewById(R.id.button);
-        chart = findViewById(R.id.chart);
+        button = view.findViewById(R.id.button);
+        chart = view.findViewById(R.id.chart);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,6 +83,7 @@ public class DiagramFragment extends AppCompatActivity {
                 //chart.invalidate();
             }
         });
+        return view;
     }
 
 

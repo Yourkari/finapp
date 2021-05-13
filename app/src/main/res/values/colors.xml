@@ -13,6 +13,7 @@
     <color name="dashboard_color">#030305</color>
     <color name="income_color">#eaedf4</color>
     <color name="expense_color">#bcc0d2</color>
+    <color name="diagram_color">#eaedf4</color>
     <color name="date_color">#3b3b43</color>
     <color name="expense_ammount">#C60000</color>
 </resources>

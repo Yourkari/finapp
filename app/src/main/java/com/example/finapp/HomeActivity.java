@@ -16,6 +16,7 @@ import android.view.MenuItem;
 import android.widget.FrameLayout;
 
 
+import com.example.finapp.diagrams.DiagramFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,6 +31,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private DashBoardFragment dashBoardFragment;
     private IncomeFragment incomeFragment;
     private ExpenseFragment expenseFragment;
+    private DiagramFragment diagramFragment;
 
     private FirebaseAuth mAuth;
 
@@ -64,6 +66,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         dashBoardFragment = new DashBoardFragment();
         incomeFragment = new IncomeFragment();
         expenseFragment = new ExpenseFragment();
+        diagramFragment = new DiagramFragment();
 
         setFragment(dashBoardFragment);
 
@@ -87,6 +90,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                     case R.id.expense:
                         setFragment(expenseFragment);
                         bottomNavigationView.setItemBackgroundResource(R.color.expense_color);
+                        return true;
+
+                    case R.id.diagram:
+                        setFragment(diagramFragment);
+                        bottomNavigationView.setItemBackgroundResource(R.color.diagram_color);
                         return true;
 
                     default:
@@ -129,6 +137,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             case R.id.expense:
                 fragment = new ExpenseFragment();
                 break;
+
+            case R.id.diagram:
+                fragment = new DiagramFragment();
+                break;
+
 
             case R.id.logout:
                 mAuth.signOut();

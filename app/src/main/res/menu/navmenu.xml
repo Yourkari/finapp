@@ -13,7 +13,7 @@
         android:title="Expense"
         android:icon="@drawable/expense"/>
 
-    <item android:id="@+id/chart"
+    <item android:id="@+id/diagram"
         android:title="Diagrams"/>
 
     <item android:id="@+id/logout"
