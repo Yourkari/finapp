@@ -7,51 +7,69 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.example.finapp.R;
 import com.example.finapp.enums.ApplicationEnums;
-import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.example.finapp.model.Data;
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class DiagramFragment extends Fragment {
 
-    private LineChart chart;
+    private PieChart pieChart;
     private Spinner spinner;
+
+    private float totalIncomeResult;
+    private float totalExpenseResult;
+
+    private FirebaseAuth mAuth;
+    private DatabaseReference mIncomeDatabase;
+    private DatabaseReference mExpenseDatabase;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_graphics, container, false);
 
-        chart = view.findViewById(R.id.chart);
+        pieChart = (PieChart) view.findViewById(R.id.pieChart);
         spinner = view.findViewById(R.id.spinner);
 
         List<String> categories = new ArrayList<>();
         categories.add(ApplicationEnums.INCOME.getCode());
         categories.add(ApplicationEnums.EXCHANGE.getCode());
+        categories.add(ApplicationEnums.UNION_IE.getCode());
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this.getActivity(), android.R.layout.simple_spinner_item, categories);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
         spinner.setAdapter(dataAdapter);
+        loadTotalValues();
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
                 if (ApplicationEnums.INCOME.getCode().equals(String.valueOf(spinner.getSelectedItem()))) {
                     createIncomeDiagram();
-                } else {
+                } else if (ApplicationEnums.EXCHANGE.getCode().equals(String.valueOf(spinner.getSelectedItem()))) {
                     createExchangeDiagram();
+                } else {
+                    createIncomeExchangeDiagram();
                 }
             }
 
@@ -63,89 +81,93 @@ public class DiagramFragment extends Fragment {
         return view;
     }
 
+    private void createIncomeExchangeDiagram() {
+        pieChart.setUsePercentValues(true);
+        pieChart.getDescription().setEnabled(false);
+        pieChart.setExtraOffsets(5, 10, 5, 5);
+
+        pieChart.setDragDecelerationFrictionCoef(0.95f);
+
+        pieChart.setDrawHoleEnabled(true);
+        pieChart.setHoleColor(Color.WHITE);
+        pieChart.setTransparentCircleRadius(61f);
+
+        ArrayList<PieEntry> pieEntries = new ArrayList<>();
+        pieEntries.add(new PieEntry(totalIncomeResult, ApplicationEnums.INCOME.getCode() + " (" + totalIncomeResult + ")"));
+        pieEntries.add(new PieEntry(totalExpenseResult, ApplicationEnums.EXCHANGE.getCode() + " (" + totalExpenseResult + ")"));
+
+        PieDataSet pieDataSet = new PieDataSet(pieEntries, ApplicationEnums.UNION_IE.getCode());
+        pieDataSet.setSliceSpace(3f);
+        pieDataSet.setSelectionShift(5f);
+        pieDataSet.setColors(ColorTemplate.JOYFUL_COLORS);
+
+        PieData data = new PieData((pieDataSet));
+        data.setValueTextSize(10f);
+        data.setValueTextColor(Color.YELLOW);
+
+        pieChart.setData(data);
+        pieChart.animate();
+    }
+
     private void createIncomeDiagram() {
-
-        // Массив координат точек
-        ArrayList<Entry> entriesFirst = new ArrayList<>();
-        entriesFirst.add(new Entry(1f, 5f));
-        entriesFirst.add(new Entry(2f, 2f));
-        entriesFirst.add(new Entry(3f, 1f));
-        entriesFirst.add(new Entry(4f, -3f));
-        entriesFirst.add(new Entry(5f, 4f));
-        entriesFirst.add(new Entry(6f, 1f));
-
-        // На основании массива точек создадим первую линию с названием
-        LineDataSet datasetFirst = new LineDataSet(entriesFirst, "График первый");
-        // График будет заполненным
-        datasetFirst.setDrawFilled(true);
-
-        // Массив координат точек второй линии
-        ArrayList<Entry> entriesSecond = new ArrayList<>();
-        entriesSecond.add(new Entry(0.5f, 0f));
-        entriesSecond.add(new Entry(2.5f, 2f));
-        entriesSecond.add(new Entry(3.5f, 1f));
-        entriesSecond.add(new Entry(3.6f, 2f));
-        entriesSecond.add(new Entry(4f, 0.5f));
-        entriesSecond.add(new Entry(5.1f, -0.5f));
-
-        // На основании массива точек создаем вторую линию с названием
-        LineDataSet datasetSecond = new LineDataSet(entriesSecond, "График второй");
-        // График будет зеленого цвета
-        datasetSecond.setColor(Color.GREEN);
-        // График будет плавным
-        datasetSecond.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-
-        // Линии графиков соберем в один массив
-        ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(datasetFirst);
-        dataSets.add(datasetSecond);
-
-        // Создадим переменную  данных для графика
-        LineData data = new LineData(dataSets);
-        // Передадим данные для графика в сам график
-        chart.setData(data);
-
-        // График будет анимироваться 0.5 секунды
-        chart.animateY(500);
-
-
-        // Не забудем отправить команду на перерисовку кадра, иначе график не отобразится
-        // Но если график анимируется, то он отрисуется самостоятельно, так что
-        // команда ниже не обязательна
-        //chart.invalidate();
+        pieChart.setData(null);
+        //pieChart = null;
     }
 
     private void createExchangeDiagram() {
-        // Массив координат точек второй линии
-        ArrayList<Entry> entriesSecond = new ArrayList<>();
-        entriesSecond.add(new Entry(0.5f, 0f));
-        entriesSecond.add(new Entry(2.5f, 2f));
-        entriesSecond.add(new Entry(5.5f, 1f));
-        entriesSecond.add(new Entry(2.1f, 2f));
+        pieChart.setData(null);
+        //pieChart = null;
+    }
 
-        // На основании массива точек создаем вторую линию с названием
-        LineDataSet datasetSecond = new LineDataSet(entriesSecond, "График второй");
-        // График будет зеленого цвета
-        datasetSecond.setColor(Color.GREEN);
-        // График будет плавным
-        datasetSecond.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+    private void loadTotalValues() {
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser mUser = mAuth.getCurrentUser();
+        assert mUser != null;
+        String uid = mUser.getUid();
 
-        // Линии графиков соберем в один массив
-        ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(datasetSecond);
+        mIncomeDatabase = FirebaseDatabase.getInstance().getReference().child("IncomeData").child(uid);
+        mExpenseDatabase = FirebaseDatabase.getInstance().getReference().child("ExpanseData").child(uid);
 
-        // Создадим переменную  данных для графика
-        LineData data = new LineData(dataSets);
-        // Передадим данные для графика в сам график
-        chart.setData(data);
+        mIncomeDatabase.keepSynced(true);
+        mExpenseDatabase.keepSynced(true);
+        mIncomeDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int totalSum = 0;
 
-        // График будет анимироваться 0.5 секунды
-        chart.animateY(500);
+                for (DataSnapshot mysnap : snapshot.getChildren()) {
+                    Data data = mysnap.getValue(Data.class);
+
+                    assert data != null;
+                    totalSum += data.getAmount();
+
+                    totalIncomeResult = (float) totalSum;
 
 
-        // Не забудем отправить команду на перерисовку кадра, иначе график не отобразится
-        // Но если график анимируется, то он отрисуется самостоятельно, так что
-        // команда ниже не обязательна
-        //chart.invalidate();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+        mExpenseDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int totalsum = 0;
+                for (DataSnapshot mysnapshot : snapshot.getChildren()) {
+                    Data data = mysnapshot.getValue(Data.class);
+                    assert data != null;
+                    totalsum += data.getAmount();
+                    totalExpenseResult = (float) totalsum;
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 }
